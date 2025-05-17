@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const fileUpload = require("express-fileupload");
 const cloudinary = require("cloudinary").v2;
+const convertToBase64 = require("../utils/convertToBase64");
 // import des middlewares
 
 const isAuthenticated = require("../middleware/isAuthenticated");
@@ -12,11 +13,6 @@ const Offer = require("../models/Offer");
 const User = require("../models/User");
 // Usage des routes
 const router = express.Router();
-// Fonction d'encodage d'image (from Xavier Colombel 😊)
-
-const convertToBase64 = (file) => {
-  return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
-};
 
 // CREATE
 // Création d'une offre
@@ -30,13 +26,25 @@ router.post(
       const { title, description, price, condition, city, brand, size, color } =
         req.body;
 
-      // encodage de la picture
-      const convertedFiles = convertToBase64(req.files.picture);
-      // envoi vers cloudinary
-      const cloudinaryResponse = await cloudinary.uploader.upload(
-        convertedFiles,
-        { folder: `Tinved/offer` }
-      );
+      // Limitation
+
+      if (title.length > 50) {
+        return res
+          .status(404)
+          .json({ message: "Title length is not available" });
+      }
+
+      if (description.length > 500) {
+        return res
+          .status(404)
+          .json({ message: "Description length is not available" });
+      }
+
+      if (price > 100000) {
+        return res
+          .status(404)
+          .json({ message: "Price is not Available, too High" });
+      }
 
       // Création de l'objet dans la base de donnée
 
@@ -51,10 +59,17 @@ router.post(
           { TAILLE: size },
           { COULEUR: color },
         ],
-        product_image: cloudinaryResponse,
+        product_image: undefined,
         owner: req.user,
       });
-
+      // encodage de la picture
+      const convertedFiles = convertToBase64(req.files.picture);
+      // envoi vers cloudinary
+      const cloudinaryResponse = await cloudinary.uploader.upload(
+        convertedFiles,
+        { folder: `Tinved/offer/${newOffer.id}` }
+      );
+      newOffer.product_image = cloudinaryResponse;
       await newOffer.save();
 
       const returnObject = {
@@ -69,8 +84,6 @@ router.post(
         },
         product_image: newOffer.product_image,
       };
-
-      console.log(returnObject);
 
       return res.status(200).json(returnObject);
     } catch (error) {
@@ -183,15 +196,14 @@ router.put("/offer/update", isAuthenticated, fileUpload(), async (req, res) => {
       }
       if (req.files) {
         // supression sur cloudinary de l'image
-        const couldinaryDestroyed = await cloudinary.uploader.destroy(
-          foundOffer.product_image.public_id
-        );
+        await cloudinary.uploader.destroy(foundOffer.product_image.public_id);
         // nettoyage de la BDD
         foundOffer.product_image = {};
         // post de la nouvelle image sur cloudinary
         const newConvertedFiles = convertToBase64(req.files.picture);
         const cloudinaryResponse = await cloudinary.uploader.upload(
-          newConvertedFiles
+          newConvertedFiles,
+          { folder: `Tinved/offer/${foundOffer.id}` }
         );
         // Push dans la BDD
         foundOffer.product_image = cloudinaryResponse;

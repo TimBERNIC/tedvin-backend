@@ -5,6 +5,8 @@ const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 const uid2 = require("uid2");
 const fileUpload = require("express-fileupload");
+const convertToBase64 = require("../utils/convertToBase64");
+const cloudinary = require("cloudinary").v2;
 
 // utilisation de Router
 const router = express.Router();
@@ -35,12 +37,21 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
           email: req.body.email,
           account: {
             username: username,
+            avatar: undefined,
           },
           newsletter: newsletter,
           token: newToken,
           hash: newHash,
           salt: newSalt,
         });
+        // ajout de l'Avatar
+        const encodedAvatar = convertToBase64(req.files.avatar);
+        const cloudinaryResponse = await cloudinary.uploader.upload(
+          encodedAvatar,
+          { folder: `Tinved/user/${newUser._id}` }
+        );
+        newUser.account.avatar = cloudinaryResponse;
+
         await newUser.save();
         const responseObject = {
           _id: newUser._id,
@@ -85,7 +96,20 @@ router.post("/user/login", async (req, res) => {
 // Update
 
 // Delete
-
+router.delete("/user/delete/:id", async (req, res) => {
+  try {
+    const foundUser = await User.findById(req.params.id);
+    console.log(cloudinary.api);
+    if (!foundUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    await User.findByIdAndDelete(req.params.id);
+    await cloudinary.uploader.api.delete_folder(`Tinved/user`);
+    return res.status(200).json({ message: "User delete success" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
 // export
 
 module.exports = router;
