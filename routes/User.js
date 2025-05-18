@@ -7,12 +7,14 @@ const uid2 = require("uid2");
 const fileUpload = require("express-fileupload");
 const convertToBase64 = require("../utils/convertToBase64");
 const cloudinary = require("cloudinary").v2;
+const isAuthenticated = require("../middleware/isAuthenticated");
 
 // utilisation de Router
 const router = express.Router();
 
 // récupération des modèles
 const User = require("../models/User");
+const Offer = require("../models/Offer");
 
 // CRUD
 // Create
@@ -96,20 +98,48 @@ router.post("/user/login", async (req, res) => {
 // Update
 
 // Delete
-router.delete("/user/delete/:id", async (req, res) => {
-  try {
-    const foundUser = await User.findById(req.params.id);
-    console.log(cloudinary.api);
-    if (!foundUser) {
-      return res.status(404).json({ message: "User not found" });
+router.delete(
+  "/user/delete/:id",
+  isAuthenticated,
+  fileUpload(),
+  async (req, res) => {
+    try {
+      // trouver le user
+      const foundUser = await User.findById(req.params.id);
+
+      if (!foundUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // trouver les offres associée
+      const foundUserOffers = await Offer.find({ owner: req.params.id });
+      // supprimer les offers du User dans cloudinary
+      for (let i = 0; i < foundUserOffers.length; i++) {
+        await cloudinary.uploader.destroy(
+          foundUserOffers[i].product_image.public_id
+        );
+        // supprimer, les dossiers de cloudinary
+        await cloudinary.api.delete_folder(
+          `Tinved/offer/${foundUserOffers[i]._id}`
+        );
+      }
+
+      // // supprimer les offers du User dans mongoDB
+      await Offer.deleteMany({ owner: req.params.id });
+      //effacer les fichiers puis les dossiers User cloudinary (sinon error folder not empty)
+      await cloudinary.uploader.destroy(foundUser.account.avatar.public_id);
+      await cloudinary.api.delete_folder(`Tinved/user/${req.params.id}`);
+      // Supprimer le user dans mondoDB
+      await User.findByIdAndDelete(req.params.id);
+      return res
+        .status(200)
+        .json({ message: "User and offers delete success" });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: error.message });
     }
-    await User.findByIdAndDelete(req.params.id);
-    await cloudinary.api.delete_folder(`Home/Tinved/user/${req.params.id}`);
-    return res.status(200).json({ message: "User delete success" });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
   }
-});
+);
 // export
 
 module.exports = router;
