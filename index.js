@@ -29,7 +29,7 @@ app.use(offerRoute);
 // Routes initiales
 app.get("/", (req, res) => {
   try {
-    return res.status(200).json("Welcome to se Vinted's Server!");
+    return res.status(200).json("Welcome to the Vinted's Server!");
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

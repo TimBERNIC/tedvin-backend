@@ -67,7 +67,7 @@ router.post(
       // envoi vers cloudinary
       const cloudinaryResponse = await cloudinary.uploader.upload(
         convertedFiles,
-        { folder: `Tinved/offer/${newOffer.id}` }
+        { folder: `Tedvin/offer/${newOffer.id}` }
       );
       newOffer.product_image = cloudinaryResponse;
       await newOffer.save();
