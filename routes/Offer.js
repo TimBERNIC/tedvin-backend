@@ -203,7 +203,7 @@ router.put("/offer/update", isAuthenticated, fileUpload(), async (req, res) => {
         const newConvertedFiles = convertToBase64(req.files.picture);
         const cloudinaryResponse = await cloudinary.uploader.upload(
           newConvertedFiles,
-          { folder: `Tinved/offer/${foundOffer.id}` }
+          { folder: `Tedvin/offer/${foundOffer.id}` }
         );
         // Push dans la BDD
         foundOffer.product_image = cloudinaryResponse;

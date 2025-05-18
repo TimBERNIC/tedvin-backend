@@ -50,7 +50,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
         const encodedAvatar = convertToBase64(req.files.avatar);
         const cloudinaryResponse = await cloudinary.uploader.upload(
           encodedAvatar,
-          { folder: `Tinved/user/${newUser._id}` }
+          { folder: `Tedvin/user/${newUser._id}` }
         );
         newUser.account.avatar = cloudinaryResponse;
 
@@ -120,7 +120,7 @@ router.delete(
         );
         // supprimer, les dossiers de cloudinary
         await cloudinary.api.delete_folder(
-          `Tinved/offer/${foundUserOffers[i]._id}`
+          `Tedvin/offer/${foundUserOffers[i]._id}`
         );
       }
 
@@ -128,7 +128,7 @@ router.delete(
       await Offer.deleteMany({ owner: req.params.id });
       //effacer les fichiers puis les dossiers User cloudinary (sinon error folder not empty)
       await cloudinary.uploader.destroy(foundUser.account.avatar.public_id);
-      await cloudinary.api.delete_folder(`Tinved/user/${req.params.id}`);
+      await cloudinary.api.delete_folder(`Tedvin/user/${req.params.id}`);
       // Supprimer le user dans mondoDB
       await User.findByIdAndDelete(req.params.id);
       return res
