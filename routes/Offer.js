@@ -223,6 +223,8 @@ router.delete("/offer/delete/:id", isAuthenticated, async (req, res) => {
   try {
     const foundOffer = await Offer.findById(req.params.id).populate("owner");
     if (req.user.token === foundOffer.owner.token) {
+      await cloudinary.uploader.destroy(foundOffer.product_image.public_id);
+      await cloudinary.api.delete_folder(`Tedvin/offer/${req.params.id}`);
       await Offer.deleteOne({ _id: req.params.id });
       return res.status(200).json({ message: "Object delete" });
     } else {
