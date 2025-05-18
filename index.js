@@ -41,5 +41,5 @@ app.all(/.*/, (req, res) => {
 // ouverture du serveur
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log("TEDVIN's Server Launch !! 👖👕👗👘");
+  console.log("TEDVIN's Server Launch !! 👖👕👗👘 on port:" + port);
 });
