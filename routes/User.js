@@ -97,6 +97,55 @@ router.post("/user/login", async (req, res) => {
 
 // Update
 
+router.put(
+  "/user/update/:id",
+  isAuthenticated,
+  fileUpload(),
+  async (req, res) => {
+    try {
+      const foundUser = await User.findById(req.params.id);
+      const { username, email, newPassword, newsletter } = req.body;
+      if (!foundUser) {
+        return res.status(404).json("Not Found");
+      } else {
+        if (email) {
+          foundUser.email = req.body.email;
+        }
+        if (username) {
+          foundUser.account.username = req.body.username;
+        }
+        if (newsletter) {
+          foundUser.newsletter = req.body.newsletter;
+        }
+        if (newPassword) {
+          const newSalt = uid2(24);
+          const newHash = SHA256(newPassword + newSalt).toString(encBase64);
+          const newToken = uid2(36);
+          if (newHash === foundUser.hash) {
+            return res.status(400).json({ message: "Invalid new Password" });
+          } else {
+            (foundUser.token = newToken),
+              (foundUser.salt = newSalt),
+              (foundUser.hash = newHash);
+          }
+        }
+
+        if (req.files) {
+          const encodedAvatar = convertToBase64(req.files.avatar);
+          await cloudinary.uploader.destroy(foundUser.account.avatar.public_id);
+          const cloudinaryResponse = await cloudinary.uploader.upload(
+            encodedAvatar,
+            { folder: `Tedvin/user/${newUser._id}` }
+          );
+          foundUser.account.avatar = cloudinaryResponse;
+        }
+        return res.status(200).json({ message: "User Update" });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: error.message });
+    }
+  }
+);
 // Delete
 router.delete(
   "/user/delete/:id",
@@ -135,7 +184,6 @@ router.delete(
         .status(200)
         .json({ message: "User and offers delete success" });
     } catch (error) {
-      console.log(error);
       return res.status(500).json({ message: error.message });
     }
   }

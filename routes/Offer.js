@@ -92,7 +92,7 @@ router.post(
   }
 );
 // READ
-
+// récupérer toutes les offres
 router.get("/offers", async (req, res) => {
   try {
     // filtre par query possible
@@ -141,7 +141,7 @@ router.get("/offers", async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 });
-
+// récupérer toutes les offres by Id
 router.get("/offers/:id", async (req, res) => {
   try {
     const foundOfferById = await Offer.findById(req.params.id).populate(
