@@ -131,14 +131,16 @@ router.put(
         }
 
         if (req.files) {
-          const encodedAvatar = convertToBase64(req.files.avatar);
           await cloudinary.uploader.destroy(foundUser.account.avatar.public_id);
+          const encodedAvatar = convertToBase64(req.files.avatar);
           const cloudinaryResponse = await cloudinary.uploader.upload(
             encodedAvatar,
-            { folder: `Tedvin/user/${newUser._id}` }
+            { folder: `Tedvin/user/${foundUser._id}` }
           );
           foundUser.account.avatar = cloudinaryResponse;
         }
+
+        await foundUser.save();
         return res.status(200).json({ message: "User Update" });
       }
     } catch (error) {
