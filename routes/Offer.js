@@ -129,7 +129,7 @@ router.get("/offers", async (req, res) => {
       page = req.query.page;
     }
 
-    const limitPerPage = 5;
+    const limitPerPage = 40;
     const offers = await Offer.find(filter)
       .sort({ product_price: sort })
       .limit(limitPerPage)
