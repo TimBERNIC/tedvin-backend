@@ -22,6 +22,7 @@ const Offer = require("../models/Offer");
 router.post("/user/signup", fileUpload(), async (req, res) => {
   try {
     const { username, email, password, newsletter } = req.body;
+
     if (!email || !username || !password) {
       return res.status(400).json({ message: "missing parameters" });
     } else {
@@ -47,12 +48,14 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
           salt: newSalt,
         });
         // ajout de l'Avatar
-        const encodedAvatar = convertToBase64(req.files.avatar);
-        const cloudinaryResponse = await cloudinary.uploader.upload(
-          encodedAvatar,
-          { folder: `Tedvin/user/${newUser._id}` }
-        );
-        newUser.account.avatar = cloudinaryResponse;
+        if (req.files) {
+          const encodedAvatar = convertToBase64(req.files.avatar);
+          const cloudinaryResponse = await cloudinary.uploader.upload(
+            encodedAvatar,
+            { folder: `Tedvin/user/${newUser._id}` }
+          );
+          newUser.account.avatar = cloudinaryResponse;
+        }
 
         await newUser.save();
         const responseObject = {
