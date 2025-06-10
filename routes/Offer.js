@@ -133,8 +133,9 @@ router.get("/offers", async (req, res) => {
     const offers = await Offer.find(filter)
       .sort({ product_price: sort })
       .limit(limitPerPage)
-      .skip((page - 1) * limitPerPage)
-      .select("product_name product_price -_id");
+      .skip((page - 1) * limitPerPage);
+    // .select("product_name product_price -_id");
+    console.log(offers);
 
     return res.status(200).json(offers);
   } catch (error) {
