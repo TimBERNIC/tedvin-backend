@@ -133,7 +133,8 @@ router.get("/offers", async (req, res) => {
     const offers = await Offer.find(filter)
       .sort({ product_price: sort })
       .limit(limitPerPage)
-      .skip((page - 1) * limitPerPage);
+      .skip((page - 1) * limitPerPage)
+      .populate("owner");
     // .select("product_name product_price -_id");
     console.log(offers);
 
