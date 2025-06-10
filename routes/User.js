@@ -60,7 +60,7 @@ router.post("/user/signup", fileUpload(), async (req, res) => {
         await newUser.save();
         const responseObject = {
           _id: newUser._id,
-          token: newUser.account.token,
+          token: newUser.token,
           account: newUser.account,
         };
         return res.status(201).json(responseObject);
